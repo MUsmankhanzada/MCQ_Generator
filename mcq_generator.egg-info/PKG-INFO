@@ -1,0 +1,26 @@
+Metadata-Version: 2.1
+Name: mcq_generator
+Version: 0.1.0
+Summary: A multiple choice question generator using Groq AI
+Author: Muhammad Usman Khanzada
+Author-email: usmankz.khan363@gmail.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Education
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: groq
+Requires-Dist: langchain
+Requires-Dist: langchain-groq
+Requires-Dist: streamlit
+Requires-Dist: python-dotenv
+Requires-Dist: PyPDF2
+Requires-Dist: requests
+Requires-Dist: pandas
+
+# MCQ_Generator
