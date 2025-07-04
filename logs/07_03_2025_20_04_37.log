@@ -1,0 +1,1 @@
+[2025-07-03 20:05:28,802] 293 langchain_core.callbacks.manager - WARNING - Error in StdOutCallbackHandler.on_chain_start callback: AttributeError("'NoneType' object has no attribute 'get'")

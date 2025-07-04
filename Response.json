@@ -1,0 +1,46 @@
+{
+    "quiz_info": {
+      "title": "Quiz Title",
+      "subject": "Subject Name",
+      "difficulty": "easy/medium/hard",
+      "total_questions": 3
+    },
+    "questions": [
+      {
+        "id": 1,
+        "question": "What is the main topic discussed in the text?",
+        "options": {
+          "A": "Option A text",
+          "B": "Option B text",
+          "C": "Option C text",
+          "D": "Option D text"
+        },
+        "correct_answer": "A",
+        "explanation": "Brief explanation of why A is correct"
+      },
+      {
+        "id": 2,
+        "question": "Which of the following statements is true?",
+        "options": {
+          "A": "Option A text",
+          "B": "Option B text",
+          "C": "Option C text",
+          "D": "Option D text"
+        },
+        "correct_answer": "B",
+        "explanation": "Brief explanation of why B is correct"
+      },
+      {
+        "id": 3,
+        "question": "What would be the best approach for this scenario?",
+        "options": {
+          "A": "Option A text",
+          "B": "Option B text",
+          "C": "Option C text",
+          "D": "Option D text"
+        },
+        "correct_answer": "C",
+        "explanation": "Brief explanation of why C is correct"
+      }
+    ]
+  }
