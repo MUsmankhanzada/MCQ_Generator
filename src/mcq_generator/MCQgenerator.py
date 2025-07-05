@@ -29,6 +29,13 @@ llm = ChatGroq(
     stop=["\n\nQuestion:", "\n\n---", "\n\n###"]  # Stop at question boundaries
 )
 
+llm_json_fixer = ChatGroq(
+    model="llama3-70b-8192",
+    groq_api_key=key,
+    temperature=0,
+    max_tokens=4096
+)
+
 TEMPLATE = """
 # MCQ Generation Instructions
 
@@ -121,8 +128,39 @@ quiz_evaluation_prompt=PromptTemplate(input_variables=["subject", "quiz"], templ
 
 review_chain=LLMChain(llm=llm, prompt=quiz_evaluation_prompt, output_key="review", verbose=True)
 
-generate_evaluate_chain=SequentialChain(chains=[quiz_chain, review_chain], input_variables=["text", "number", "subject", "tone", "response_json"],
-                                        output_variables=["quiz", "review"], verbose=True,)
+TEMPLATE_fix_json = """
+You will receive a string that is meant to be JSON but may contain syntax errors like:
+- Missing commas, quotes, or brackets
+- Trailing commas or unbalanced braces
+- Wrongly escaped characters
+
+Your task:
+✅ Repair the string into valid JSON.  
+✅ Return only **valid JSON output** with no surrounding text or formatting.  
+✅ Do **not** wrap the JSON in markdown code fences (```), text like "Here is the JSON:", or any explanation.  
+✅ Output only raw JSON.  
+
+Here is the broken JSON string:
+{quiz}
+"""
+fix_json_prompt = PromptTemplate(
+    input_variables=["quiz"],
+    template= TEMPLATE_fix_json 
+)
+
+fix_json_chain = LLMChain(
+    llm=llm_json_fixer,
+    prompt=fix_json_prompt,
+    output_key="fixed_quiz",
+    verbose=True
+)
+
+generate_evaluate_chain=SequentialChain(
+    chains=[quiz_chain, review_chain, fix_json_chain],
+    input_variables=["text", "number", "subject", "tone", "response_json"],
+    output_variables=["quiz", "review", "fixed_quiz"],
+    verbose=False
+)
 
 
 

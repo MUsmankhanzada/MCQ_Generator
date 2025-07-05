@@ -4,6 +4,7 @@ import PyPDF2
 import json
 import pandas as pd
 from datetime import datetime
+import streamlit as st
 
 def read_file(file):
     if file.name.endswith(".pdf"):
@@ -24,80 +25,106 @@ def read_file(file):
         raise Exception(
             "unsupported file format only pdf and text file suppoted"
         )
-        
-import re
-import json
 
-import re
-import json
-import json
+import streamlit as st
 
-def parse_json_quiz(quiz_text):
-    """Extract and parse the first JSON object from the LLM output, even if pretty-printed and surrounded by text."""
-    try:
-        # Find the first '{' and parse until the matching '}'
-        start = quiz_text.find('{')
-        if start == -1:
-            print("Could not find JSON object in the text!")
-            return None
+def run_quiz_app(quiz_data):
+    st.title(quiz_data["quiz_info"]["title"])
+    st.subheader(f"Subject: {quiz_data['quiz_info']['subject']}")
+    st.markdown(f"**Difficulty:** {quiz_data['quiz_info']['difficulty'].capitalize()}")
+    st.markdown(f"**Total Questions:** {quiz_data['quiz_info']['total_questions']}")
 
-        # Use a stack to find the matching closing brace
-        stack = []
-        for i, char in enumerate(quiz_text[start:]):
-            if char == '{':
-                stack.append('{')
-            elif char == '}':
-                stack.pop()
-                if not stack:
-                    end = start + i + 1
-                    break
+    st.markdown("---")
+
+    # Session state to track current question and score
+    if "current_q" not in st.session_state:
+        st.session_state.current_q = 0
+        st.session_state.score = 0
+        st.session_state.answers = []
+
+    questions = quiz_data["questions"]
+    total_questions = len(questions)
+
+    # Current Question
+    q = questions[st.session_state.current_q]
+    st.write(f"### Question {q['id']}: {q['question']}")
+    selected_option = st.radio(
+        "Choose an option:",
+        list(q["options"].items()),
+        format_func=lambda x: f"{x[0]}) {x[1]}"
+    )
+
+    if st.button("Submit Answer"):
+        selected_key = selected_option[0]
+        st.session_state.answers.append((q["id"], selected_key))
+
+        if selected_key == q["correct_answer"]:
+            st.session_state.score += 1
+            st.success("✅ Correct!")
         else:
-            print("Could not find matching closing brace for JSON object!")
-            return None
+            st.error(f"❌ Incorrect! The correct answer was **{q['correct_answer']}**.")
+        
+        st.info(f"📖 Explanation: {q['explanation']}")
 
-        json_str = quiz_text[start:end]
+        if st.session_state.current_q < total_questions - 1:
+            st.session_state.current_q += 1
+            st.button("Next Question", key="next")
+        else:
+            st.markdown("---")
+            st.success(f"🎉 Quiz Completed! Your score: **{st.session_state.score}/{total_questions}**")
+            st.button("Restart Quiz", on_click=restart_quiz)
 
-        # Parse JSON
-        quiz_data = json.loads(json_str)
-        return quiz_data
-    except Exception as e:
-        print("Error parsing quiz JSON:", e)
-        print("Quiz string that failed to parse:", repr(json_str))
-        return None
-    
-def save_mcqs_to_csv(quiz_data, filename=None):
-    """Save MCQs to CSV format"""
-    if not quiz_data or 'questions' not in quiz_data:
-        print("No quiz data to save")
+def restart_quiz():
+    st.session_state.current_q = 0
+    st.session_state.score = 0
+    st.session_state.answers = []
+
+
+
+def save_mcqs_to_csv(json_string, filename=None):
+    """
+    Save quiz data (quiz_info + questions) from a JSON string to CSV files.
+
+    Parameters:
+    - json_string (str): The quiz data as a JSON string.
+    - filename (str, optional): The base filename for CSVs. If not provided, generates one.
+
+    Returns:
+    - tuple: Filenames of the saved CSV files (quiz_info_file, questions_file).
+    """
+    try:
+        # Parse JSON string
+        quiz_data = json.loads(json_string)
+    except json.JSONDecodeError as e:
+        print(f"❌ Failed to parse JSON string: {e}")
         return
-    
-    # Create rows for CSV
-    rows = []
-    for question in quiz_data['questions']:
-        row = {
-            'Question_Number': question.get('id', ''),
-            'Question': question.get('question', ''),
-            'Option_A': question.get('options', {}).get('A', ''),
-            'Option_B': question.get('options', {}).get('B', ''),
-            'Option_C': question.get('options', {}).get('C', ''),
-            'Option_D': question.get('options', {}).get('D', ''),
-            'Correct_Answer': question.get('correct_answer', ''),
-            'Explanation': question.get('explanation', '')
-        }
-        rows.append(row)
-    
-    # Create DataFrame
-    df = pd.DataFrame(rows)
-    
-    # Generate filename if not provided
+
+    if not quiz_data or 'questions' not in quiz_data:
+        print("❌ No quiz data to save")
+        return
+
+    # Create DataFrames
+    quiz_info_df = pd.DataFrame([quiz_data.get("quiz_info", {})])
+    questions_df = pd.DataFrame(quiz_data["questions"])
+
+    # Generate base filename if not provided
     if filename is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         subject = quiz_data.get('quiz_info', {}).get('subject', 'quiz').replace(' ', '_').lower()
-        filename = f"{subject}_mcqs_{timestamp}.csv"
-    
+        filename_base = f"{subject}_mcqs_{timestamp}"
+    else:
+        filename_base = filename.replace('.csv', '')  # Remove .csv if passed
+
+    # Create filenames for quiz_info and questions
+    quiz_info_file = f"{filename_base}_info.csv"
+    questions_file = f"{filename_base}_questions.csv"
+
     # Save to CSV
-    df.to_csv(filename, index=False, encoding='utf-8')
-    print(f"✅ MCQs saved to CSV: {filename}")
-    print(f"📊 Total questions saved: {len(rows)}")
-    
-    return filename
+    quiz_info_df.to_csv(quiz_info_file, index=False, encoding="utf-8")
+    questions_df.to_csv(questions_file, index=False, encoding="utf-8")
+
+    print(f"✅ Quiz Info saved to: {quiz_info_file}")
+    print(f"✅ Questions saved to: {questions_file}")
+    print(f"📊 Total questions saved: {len(questions_df)}")
+
+    return quiz_info_file, questions_file
