@@ -1,0 +1,6 @@
+[2025-07-06 04:34:54,330] 293 langchain_core.callbacks.manager - WARNING - Error in StdOutCallbackHandler.on_chain_start callback: AttributeError("'NoneType' object has no attribute 'get'")
+[2025-07-06 04:34:55,198] 1025 httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2025-07-06 04:34:55,214] 293 langchain_core.callbacks.manager - WARNING - Error in StdOutCallbackHandler.on_chain_start callback: AttributeError("'NoneType' object has no attribute 'get'")
+[2025-07-06 04:34:55,819] 1025 httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2025-07-06 04:34:55,823] 293 langchain_core.callbacks.manager - WARNING - Error in StdOutCallbackHandler.on_chain_start callback: AttributeError("'NoneType' object has no attribute 'get'")
+[2025-07-06 04:34:57,512] 1025 httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

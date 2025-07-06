@@ -5,7 +5,6 @@ import traceback
 from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
-from src.mcq_generator.utils import read_file
 from src.mcq_generator.logger import logging
 
 #imporing necessary packages packages from langchain
@@ -13,6 +12,7 @@ from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chains import SequentialChain
+from langchain_core.utils import get_from_dict_or_env
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -22,18 +22,18 @@ key=os.getenv("GROQ_API_KEY")
 
 llm = ChatGroq(
     model="llama3-8b-8192",
-    groq_api_key=key,
+    api_key=key,
     temperature=0.3,  # Lower temperature for consistent, factual responses
     max_tokens=2048,  # Higher limit for detailed MCQ explanations
-    top_p=0.8,       # Slightly lower for more focused responses
-    stop=["\n\nQuestion:", "\n\n---", "\n\n###"]  # Stop at question boundaries
+    stop_sequences=["\n\nQuestion:", "\n\n---", "\n\n###"]  # Stop at question boundaries
 )
 
 llm_json_fixer = ChatGroq(
     model="llama3-70b-8192",
-    groq_api_key=key,
+    api_key=key,
     temperature=0,
-    max_tokens=4096
+    max_tokens=4096,
+    stop_sequences=[]
 )
 
 TEMPLATE = """
@@ -73,7 +73,7 @@ quiz_chain=LLMChain(llm=llm, prompt=quiz_generation_prompt, output_key="quiz", v
 
 
 TEMPLATE2 = """
-# Quiz Review and Enhancement Instructions
+# Quiz Review and Analysis Instructions
 
 ## Input Quiz
 {quiz}
@@ -84,26 +84,19 @@ You are an expert English grammarian and writer. Given a Multiple Choice Quiz fo
 ## Review Requirements
 1. **Complexity Analysis**: Evaluate if questions match student cognitive abilities (max 50 words)
 2. **Quality Assessment**: Check grammar, clarity, and educational value
-3. **Difficulty Adjustment**: Update questions that don't match student level
-4. **Tone Optimization**: Adjust tone to perfectly fit student abilities
+3. **Difficulty Evaluation**: Assess if questions are appropriate for student level
+4. **Tone Analysis**: Evaluate if tone fits student abilities
 5. **Content Validation**: Ensure questions are appropriate for {subject} students
 
 ## Analysis Guidelines
 - **Cognitive Level**: Assess if questions are too easy, too hard, or just right
 - **Language Complexity**: Check vocabulary and sentence structure
-- **Question Clarity**: Ensure questions are unambiguous and well-written
-- **Option Quality**: Verify distractors are plausible but clearly incorrect
-- **Educational Value**: Confirm questions promote learning and understanding
-
-## Enhancement Instructions
-- If questions are too complex: Simplify language and reduce difficulty
-- If questions are too simple: Increase complexity and add analytical elements
-- If tone is inappropriate: Adjust to match student age and subject level
-- If grammar is poor: Correct all grammatical and punctuation errors
-- If explanations are unclear: Improve clarity and educational value
+- **Question Clarity**: Evaluate if questions are unambiguous and well-written
+- **Option Quality**: Verify if distractors are plausible but clearly incorrect
+- **Educational Value**: Confirm if questions promote learning and understanding
 
 ## Output Format
-Provide your analysis and any necessary updates in the following structure:
+Provide your analysis in the following structure:
 
 ### COMPLEXITY ANALYSIS
 [Your 50-word complexity assessment]
@@ -111,18 +104,25 @@ Provide your analysis and any necessary updates in the following structure:
 ### QUALITY ASSESSMENT
 [Grammar, clarity, and educational value review]
 
-### ENHANCED QUIZ
-[Updated quiz with improved questions, tone, and difficulty level]
+### DIFFICULTY EVALUATION
+[Assessment of question difficulty relative to student level]
 
-### CHANGES MADE
-[List of specific improvements and modifications]
+### TONE ANALYSIS
+[Evaluation of language and tone appropriateness]
+
+### CONTENT VALIDATION
+[Assessment of subject matter appropriateness and educational value]
+
+### OVERALL RECOMMENDATIONS
+[Summary of findings and general recommendations for improvement]
 
 ## Instructions
 - Be thorough but concise in your analysis
 - Focus on educational appropriateness and student engagement
-- Maintain the original quiz structure while improving quality
-- Ensure all changes enhance learning outcomes
+- Provide constructive feedback without making direct corrections
+- Identify areas that need improvement while maintaining objectivity
 """
+
 
 quiz_evaluation_prompt=PromptTemplate(input_variables=["subject", "quiz"], template=TEMPLATE2)
 

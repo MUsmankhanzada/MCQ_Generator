@@ -193,6 +193,29 @@ You can modify these in the `EnhancedMCQGenerator` class.
 
 - `GROQ_API_KEY`: Your Groq API key (required)
 
+## Recent Updates
+
+### Enhanced Chain Logic (Latest)
+
+The MCQ generation chain has been enhanced to provide better separation of concerns:
+
+1. **Quiz Generation**: Creates the initial quiz
+2. **Review & Enhancement**: Reviews the quiz and outputs two separate components:
+   - **Enhanced Quiz**: An improved version of the original quiz
+   - **Analysis**: Detailed assessment of complexity, quality, and suggested improvements
+3. **JSON Fixing**: The enhanced quiz (not the original) is now processed for JSON validation
+
+This ensures that the final output uses the improved quiz rather than the original one.
+
+### Chain Output Variables
+
+The `generate_evaluate_chain` now returns:
+- `quiz`: Original generated quiz
+- `review_output`: Complete review output with markers
+- `enhanced_quiz`: Extracted enhanced quiz from review
+- `analysis`: Extracted analysis from review  
+- `fixed_quiz`: Final JSON-fixed enhanced quiz
+
 ## Troubleshooting
 
 ### Common Issues
