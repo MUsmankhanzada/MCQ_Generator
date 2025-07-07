@@ -4,8 +4,9 @@ import traceback
 from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
-from src.mcq_generator.utils import read_file, save_mcqs_to_csv
 import streamlit as st
+
+from src.mcq_generator.utils import read_file, save_mcqs_to_csv
 from src.mcq_generator.logger import logging
 from src.mcq_generator.MCQgenerator import generate_evaluate_chain
 
@@ -70,13 +71,27 @@ with tab1:
                             "response_json": json.dumps(RESPONSE_JSON)
                         })
 
-                        quiz = response["fixed_quiz"]
-                        if quiz:
+                        quiz = response.get("fixed_quiz")
+                        review = response.get("review", "").strip()
+
+                        if not quiz:
+                            st.error("⚠️ Quiz generation failed. Please try again.")
+                        else:
                             try:
                                 quiz_data = json.loads(quiz)
                                 st.session_state.quiz_data = quiz_data
                                 st.session_state.show_quiz = True
-                                st.session_state.quiz_review = response["review"]
+
+                                # Validate if the review is meaningful
+                                if not review or review.lower() in ["here is the analysis of the quiz", "analysis unavailable"]:
+                                    st.warning("⚠️ The quiz analysis could not be generated properly. Showing default analysis.")
+                                    review = (
+                                        "⚠️ *No detailed analysis available.*\n\n"
+                                        "The quiz was generated successfully but the analysis section could not be created. "
+                                        "This could happen due to insufficient text input or a token limit issue in the backend."
+                                    )
+
+                                st.session_state.quiz_review = review
                                 st.session_state.user_answers = {}  # reset answers
                                 st.session_state.quiz_submitted = False  # reset submission
 
@@ -85,13 +100,10 @@ with tab1:
 
                                 # Debug raw review
                                 with st.expander("🔍 Debug: Raw Review Output"):
-                                    st.code(response["review"], language="text")
+                                    st.code(review, language="text")
 
                             except json.JSONDecodeError as e:
                                 st.error(f"❌ Error parsing quiz data: {e}")
-
-                        else:
-                            st.error("⚠️ Error generating quiz.")
 
                     except Exception as e:
                         traceback.print_exception(type(e), e, e.__traceback__)

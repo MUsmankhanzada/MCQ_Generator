@@ -8,7 +8,7 @@ An AI-powered Multiple Choice Question (MCQ) generator that uses the Groq API to
 - 📚 **Multiple Subjects**: Generate MCQs for any subject area (computer science, math, history, etc.)
 - 🎯 **Difficulty Levels**: Support for easy, medium, and hard difficulty levels
 - 📊 **Multiple Formats**: Export to JSON, CSV, and TXT formats
-- 🖥️ **Multiple Interfaces**: Jupyter notebook, command-line interface, and Python API
+- 🖥️ **Multiple Interfaces**: Jupyter notebook, Streamlit app, and Python API
 - 🔧 **Customizable**: Adjustable parameters for question count, difficulty, and subject area
 
 ## Installation
@@ -47,64 +47,59 @@ The notebook includes:
 - Multiple export formats
 - Interactive generation
 
-### 2. Command Line Interface
+### 2. Streamlit App
 
-Generate MCQs directly from the command line:
+Run the interactive web app:
 
 ```bash
-# Basic usage
-python src/mcq_generator/cli.py --topic "Python Basics" --num-questions 5
-
-# With specific difficulty and subject
-python src/mcq_generator/cli.py --topic "Data Structures" --difficulty hard --subject "computer science"
-
-# Interactive mode
-python src/mcq_generator/cli.py --interactive
-
-# Save to specific directory
-python src/mcq_generator/cli.py --topic "Machine Learning" --output-dir "./my_mcqs"
-
-# Save in specific format only
-python src/mcq_generator/cli.py --topic "Algorithms" --format csv
+streamlit run stramlitAPP.py
 ```
 
-### 3. Python API
+Features:
+- Upload PDF or TXT files
+- Configure number of questions, subject, and tone
+- Generate MCQs and take quizzes interactively
+- Download results in CSV format
 
-Use the MCQ generator in your own Python scripts:
+### 3. Python API (Direct Programmatic Usage)
+
+You can use the MCQ generator in your own Python scripts by calling the chain directly:
 
 ```python
-from src.mcq_generator.enhanced_mcq_generator import EnhancedMCQGenerator
+from src.mcq_generator.MCQgenerator import generate_evaluate_chain
+import json
 
-# Initialize the generator
-generator = EnhancedMCQGenerator()
+# Load your input text (e.g., from a file)
+input_text = """Your study material here."""
 
-# Generate MCQs
-mcqs_response = generator.generate_mcqs(
-    topic="Python Programming",
-    num_questions=3,
-    difficulty="medium",
-    subject_area="computer science"
-)
+# Load the response JSON schema (see Response.json in the repo)
+with open("Response.json", "r") as f:
+    response_json = json.load(f)
 
-# Parse the response
-parsed_mcqs = generator.parse_mcqs_response(mcqs_response)
+# Call the chain
+result = generate_evaluate_chain({
+    "text": input_text,
+    "number": 5,  # Number of MCQs
+    "subject": "computer science",
+    "tone": "Simple",
+    "response_json": json.dumps(response_json)
+})
 
-# Save to files
-generator.save_mcqs_to_json(parsed_mcqs, "my_mcqs.json")
-generator.save_mcqs_to_csv(parsed_mcqs, "my_mcqs.csv")
+# The result is a dict with keys: 'quiz', 'review', 'fixed_quiz'
+quiz_json = result["fixed_quiz"]
+print(quiz_json)
 ```
 
-## CLI Options
+#### Saving MCQs to CSV
 
-| Option | Short | Description | Default |
-|--------|-------|-------------|---------|
-| `--topic` | `-t` | Topic for MCQ generation | Required |
-| `--num-questions` | `-n` | Number of questions (1-20) | 5 |
-| `--difficulty` | `-d` | Difficulty level (easy/medium/hard) | medium |
-| `--subject` | `-s` | Subject area | general |
-| `--output-dir` | `-o` | Output directory | current directory |
-| `--format` | `-f` | Output format (json/csv/txt/all) | all |
-| `--interactive` | `-i` | Run in interactive mode | False |
+```python
+from src.mcq_generator.utils import save_mcqs_to_csv
+save_mcqs_to_csv(quiz_json, filename="my_mcqs")
+```
+
+### 4. Command Line Interface (CLI)
+
+> **Note:** The CLI (`src/mcq_generator/cli.py`) and `example_usage.py` currently reference a non-existent `EnhancedMCQGenerator` class and will not work out-of-the-box. To use the CLI, update it to use the `generate_evaluate_chain` as shown above.
 
 ## Output Formats
 
@@ -142,23 +137,6 @@ Explanation: Functions are designed to perform specific tasks and can be reused 
 --------------------------------------------------
 ```
 
-## Examples
-
-### Computer Science MCQs
-```bash
-python src/mcq_generator/cli.py --topic "Object-Oriented Programming" --difficulty hard --subject "computer science" --num-questions 10
-```
-
-### Mathematics MCQs
-```bash
-python src/mcq_generator/cli.py --topic "Calculus Derivatives" --difficulty medium --subject "mathematics" --num-questions 5
-```
-
-### History MCQs
-```bash
-python src/mcq_generator/cli.py --topic "World War II" --difficulty easy --subject "history" --num-questions 8
-```
-
 ## Project Structure
 
 ```
@@ -168,11 +146,15 @@ MCQ_Generator/
 ├── src/
 │   └── mcq_generator/
 │       ├── __init__.py
-│       ├── enhanced_mcq_generator.py  # Main MCQ generator class
-│       └── cli.py                     # Command-line interface
+│       ├── MCQgenerator.py    # Main MCQ generation logic (chains, not a class)
+│       ├── cli.py             # Command-line interface (needs update)
+│       ├── utils.py           # Utility functions (file reading, CSV export)
+│       └── logger.py
 ├── requirement.txt            # Python dependencies
-├── setup.py                  # Package setup
-└── README.md                 # This file
+├── setup.py                   # Package setup
+├── stramlitAPP.py             # Streamlit web app
+├── Response.json              # JSON schema for MCQ output
+└── README.md                  # This file
 ```
 
 ## Configuration
@@ -181,13 +163,12 @@ MCQ_Generator/
 
 The MCQ generator uses the following default parameters for the Groq API:
 
-- **Model**: `llama3-8b-8192`
+- **Model**: `llama3-8b-8192` (generation), `llama3-70b-8192` (JSON fixing)
 - **Temperature**: 0.3 (for consistent, factual responses)
-- **Max Tokens**: 2048 (for detailed explanations)
-- **Top P**: 0.8 (for focused responses)
-- **Top K**: 30 (for quality control)
+- **Max Tokens**: 2096 (generation), 4096 (JSON fixing)
+- **Stop Sequences**: For question boundaries and JSON output
 
-You can modify these in the `EnhancedMCQGenerator` class.
+You can modify these in `src/mcq_generator/MCQgenerator.py`.
 
 ### Environment Variables
 
@@ -211,9 +192,7 @@ This ensures that the final output uses the improved quiz rather than the origin
 
 The `generate_evaluate_chain` now returns:
 - `quiz`: Original generated quiz
-- `review_output`: Complete review output with markers
-- `enhanced_quiz`: Extracted enhanced quiz from review
-- `analysis`: Extracted analysis from review  
+- `review`: Complete review output with markers
 - `fixed_quiz`: Final JSON-fixed enhanced quiz
 
 ## Troubleshooting

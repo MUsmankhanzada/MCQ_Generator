@@ -1,18 +1,9 @@
 import os
 import json
-import re
-import traceback
-from datetime import datetime
-import pandas as pd
 from dotenv import load_dotenv
-from src.mcq_generator.logger import logging
-
-#imporing necessary packages packages from langchain
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains import SequentialChain
-from langchain_core.utils import get_from_dict_or_env
+from langchain.chains import LLMChain, SequentialChain
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -24,7 +15,7 @@ llm = ChatGroq(
     model="llama3-8b-8192",
     api_key=key,
     temperature=0.3,  # Lower temperature for consistent, factual responses
-    max_tokens=2048,  # Higher limit for detailed MCQ explanations
+    max_tokens=2096,  # Higher limit for detailed MCQ explanations
     stop_sequences=["\n\nQuestion:", "\n\n---", "\n\n###"]  # Stop at question boundaries
 )
 
@@ -70,7 +61,6 @@ quiz_generation_prompt = PromptTemplate(
     )
 
 quiz_chain=LLMChain(llm=llm, prompt=quiz_generation_prompt, output_key="quiz", verbose=True)
-
 
 TEMPLATE2 = """
 # Quiz Review and Analysis Instructions
@@ -122,7 +112,6 @@ Provide your analysis in the following structure:
 - Provide constructive feedback without making direct corrections
 - Identify areas that need improvement while maintaining objectivity
 """
-
 
 quiz_evaluation_prompt=PromptTemplate(input_variables=["subject", "quiz"], template=TEMPLATE2)
 
