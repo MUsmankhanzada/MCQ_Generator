@@ -10,6 +10,7 @@ An AI-powered Multiple Choice Question (MCQ) generator that uses the Groq API to
 - 📊 **Multiple Formats**: Export to JSON, CSV, and TXT formats
 - 🖥️ **Multiple Interfaces**: Jupyter notebook, Streamlit app, and Python API
 - 🔧 **Customizable**: Adjustable parameters for question count, difficulty, and subject area
+- 📝 **Interactive Quizzing**: Users can answer quiz questions in real time, see their score at the end, and view explanations for each correct answer.
 
 ## Installation
 
@@ -59,6 +60,7 @@ Features:
 - Upload PDF or TXT files
 - Configure number of questions, subject, and tone
 - Generate MCQs and take quizzes interactively
+- **Answer quiz questions in real time, see your score at the end, and view explanations for each correct answer**
 - Download results in CSV format
 
 ### 3. Python API (Direct Programmatic Usage)
