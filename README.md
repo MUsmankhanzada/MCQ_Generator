@@ -1,3 +1,4 @@
+
 # MCQ Generator
 
 An AI-powered Multiple Choice Question (MCQ) generator that uses the Groq API to create high-quality educational questions.
